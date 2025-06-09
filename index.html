@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мудрость сквозь века</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Georgia, serif;
+            background-color: #726d67;
+            color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            text-align: center;
+        }
+        h1 {
+            margin-top: 40px;
+            font-size: 36px;
+            color: #e5d8c5;
+        }
+        p.description {
+            max-width: 600px;
+            font-size: 18px;
+            margin: 10px 20px 30px 20px;
+            color: #d0c5b5;
+        }
+        select {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 12px 24px;
+            margin-bottom: 20px;
+            border: 2px solid #5a3f31;
+            border-radius: 8px;
+            background-color: #3e2d24;
+            color: #f5f5f5;
+            box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+        }
+        .quote-container {
+            background-color: #2f211b;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px;
+            max-width: 600px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        .quote-text {
+            font-size: 22px;
+            margin-bottom: 15px;
+            font-style: italic;
+            color: #f0e6d2;
+        }
+        .quote-author {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #e5d8c5;
+        }
+        .quote-source {
+            font-size: 16px;
+            color: #c2b6a6;
+            font-style: italic;
+            margin-bottom: 5px;
+        }
+        .copy-emoji {
+            font-size: 20px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.2s;
+            margin-top: 0;
+        }
+        .copy-emoji:hover {
+            transform: scale(1.2);
+        }
+        .copy-message {
+            font-size: 14px;
+            color: #8fce00;
+            margin-top: 10px;
+            display: none;
+        }
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            font-size: 14px;
+            color: #b5aba1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Мудрость сквозь века</h1>
+    <p class="description">Слушай голоса сквозь века. Вопросы, ответы и сомнения — ключи к новому восприятию мира.</p>
+    
+    <select id="categorySelect" onchange="updateAuthorList(); showRandomQuote();">
+        <option value="stoicism">Стоицизм</option>
+        <option value="eastern">Восточная философия</option>
+        <option value="skepticism">Скептицизм</option>
+        <option value="existentialism">Экзистенциализм</option>
+    </select>
+    
+    <select id="authorSelect" onchange="showRandomQuote();">
+        <option value="all">Все авторы</option>
+    </select>
+
+    <div class="quote-container" id="quoteContainer">
+        <div class="quote-text" id="quoteText">Загрузка цитаты...</div>
+        <div class="quote-author" id="quoteAuthor"></div>
+        <div class="quote-source" id="quoteSource"></div>
+        <div class="copy-emoji" onclick="copyQuote()">📋</div>
+    </div>
+    
+    <button onclick="showRandomQuote()">Новая цитата</button>
+    
+    <div class="copy-message" id="copyMessage">Скопировано!</div>
+    <footer>wisdom.project</footer>
+
+    <script src="quotes_FULL_FOR_GITHUB.js"></script>
+    <script>
+        let usedQuotes = {
+            stoicism: [],
+            eastern: [],
+            skepticism: [],
+            existentialism: []
+        };
+
+        function updateAuthorList() {
+            const category = document.getElementById("categorySelect").value;
+            const categoryQuotes = quotes[category];
+            const authorsSet = new Set(categoryQuotes.map(q => q.author));
+            
+            const authorSelect = document.getElementById("authorSelect");
+            authorSelect.innerHTML = '<option value="all">Все авторы</option>';
+            
+            Array.from(authorsSet).sort().forEach(author => {
+                const option = document.createElement("option");
+                option.value = author;
+                option.textContent = author;
+                authorSelect.appendChild(option);
+            });
+        }
+
+        function showRandomQuote() {
+            const category = document.getElementById("categorySelect").value;
+            const categoryQuotes = quotes[category];
+            const selectedAuthor = document.getElementById("authorSelect").value;
+
+            let filteredQuotes = selectedAuthor === "all"
+                ? categoryQuotes
+                : categoryQuotes.filter(q => q.author === selectedAuthor);
+
+            // Сброс использованных, если все показаны
+            if (usedQuotes[category].length === filteredQuotes.length) {
+                usedQuotes[category] = [];
+            }
+
+            let quote;
+            do {
+                quote = filteredQuotes[Math.floor(Math.random() * filteredQuotes.length)];
+            } while (usedQuotes[category].includes(quote) && usedQuotes[category].length < filteredQuotes.length);
+
+            usedQuotes[category].push(quote);
+
+            document.getElementById("quoteText").innerText = quote.text;
+            document.getElementById("quoteAuthor").innerText = `— ${quote.author}`;
+            document.getElementById("quoteSource").innerText = quote.source;
+        }
+
+        function copyQuote() {
+            const text = document.getElementById('quoteText').innerText;
+            const author = document.getElementById('quoteAuthor').innerText;
+            const source = document.getElementById('quoteSource').innerText;
+
+            const fullQuote = `"${text}" ${author} (${source})`;
+
+            navigator.clipboard.writeText(fullQuote).then(() => {
+                const copyMsg = document.getElementById('copyMessage');
+                copyMsg.style.display = 'block';
+                setTimeout(() => {
+                    copyMsg.style.display = 'none';
+                }, 2000);
+            });
+        }
+
+        window.onload = () => {
+            updateAuthorList();
+            showRandomQuote();
+        };
+    </script>
+</body>
+</html>
